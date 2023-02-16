@@ -46,6 +46,10 @@ Inner 对应平台的额外部署模块，用于第三方开发者的私有功�
 
 ### ZhiJinComplier
 
+This product uses [FASTBuild](https://github.com/fastbuild/fastbuild) © 2012-2023 Franta Fulin
+
+本项目使用 [FASTBuild](https://github.com/fastbuild/fastbuild) 作为部分开发组件，感谢所有开源开发者的贡献。
+
 #### Windows
 
 使用 Visual Studio Installer 进行安装，选择 C++ 与游戏开发相关模块安装即可。
