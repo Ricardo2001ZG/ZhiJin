@@ -1,0 +1,40 @@
+// sidebar
+$menuText:#FFFFFF;
+$menuActiveText:#8db7ff;
+$subMenuActiveText:#202020;
+$subMenuActiveBg:#8db7ff;
+$menuBg:#5782CF;
+$menuHover:#4668a6;
+$subMenuBg:#FFFFFF;
+$subMenuHover:#FFFFFF;
+$sideBarWidth: 210px;
+$odd: #f1f6ff;
+$even: #FFFFFF;
+$tableBorderColor:#ccd8e2;
+$tableHeaderColor:#fff;
+$tableHeaderBackgroundColor:#5b7db8;
+$portUpBackgroundColor:green;
+$portUpColor:white;
+$portDownBackgroundColor:red;
+$portDownColor:white;
+$portStopBackgroundColor:white;
+$portStopColor:black;
+
+// the :export directive is the magic sauce for webpack
+// https://www.bluematador.com/blog/how-to-share-variables-between-js-and-sass
+:export {
+    menuText: $menuText;
+    menuActiveText: $menuActiveText;
+    subMenuActiveText: $subMenuActiveText;
+    subMenuActiveBg: $subMenuActiveBg;
+    menuBg: $menuBg;
+    menuHover: $menuHover;
+    subMenuBg: $subMenuBg;
+    subMenuHover: $subMenuHover;
+    sideBarWidth: $sideBarWidth;
+    odd: $odd;
+    even: $even;
+    tableBorderColor: $tableBorderColor;
+    tableHeaderColor: $tableHeaderColor;
+    tableHeaderBackgroundColor: $tableHeaderBackgroundColor;
+}

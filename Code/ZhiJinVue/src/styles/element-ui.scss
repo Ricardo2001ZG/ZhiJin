@@ -1,0 +1,84 @@
+// cover some element-ui styles
+$blue:#409eff;
+.el-breadcrumb__inner,
+.el-breadcrumb__inner a {
+    font-weight: 400 !important;
+}
+
+/* 按钮 */
+.el-button{
+  font-family: 'siyuan';
+}
+
+.el-button--primary{
+    background-color: #5782cf !important;
+}
+.el-button--small{
+  font-size: 14px !important;
+}
+/* 弹窗 */
+// to fixed https://github.com/ElemeFE/element/issues/2461
+.el-dialog {
+    // min-width: 800px;
+    transform: none;
+    left: 0;
+    position: relative;
+    .el-dialog__header {
+      padding: 24px;
+      font-weight: 600;
+        // border-bottom: 4px solid $blue;
+        .el-dialog__title {
+            &::before {
+                content: "";
+                display: inline-block;
+                width: 4px;
+                height: 18px;
+                background-color: #5782CF;
+                margin-right: 10px;
+                border-radius: 25%;
+                vertical-align: text-top;
+            }
+        }
+    }
+    .el-dialog__body {
+      padding: 0 40px;
+    }
+    .el-dialog__footer {
+      padding: 0 24px 24px;
+    }
+  //   .elDialogFooter {
+  //     margin-right: -16px;
+  //     margin-top: 24px;
+  //     text-align: right;
+  // }
+}
+
+
+
+// dropdown
+.el-dropdown-menu {
+    a {
+        display: block
+    }
+}
+
+/* 表格 */
+// 表格行高度 59
+.el-table .el-table__row .el-table__cell{
+  padding: 4px 0;
+}
+// 表头排序三角的颜色
+.el-table .sort-caret{
+  &.descending{
+    border-top-color: #fff;
+  }
+  &.ascending {
+    border-bottom-color: #fff;
+  }
+}
+
+
+/* 文本框样式 */
+.el-textarea .el-textarea__inner {
+  resize: none;
+}
