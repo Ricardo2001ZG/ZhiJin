@@ -1,0 +1,67 @@
+# FASTBuild
+*.exe
+*.fdb
+*.fdb.corrupt
+*.log
+*.opensdf
+*.pdb
+*.sdf
+*.suo
+*.user
+fbuild-linux
+tmp/
+ftmp/
+bin/
+profile.json
+
+# Temp files
+*.bak
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# SDKs and Compilers
+External/SDK/Clang/Linux/*/
+External/SDK/Clang/OSX/*/
+External/SDK/Clang/Windows/*/
+External/SDK/CUDA_6.5.14/
+External/SDK/GCC/Linux/*/
+External/SDK/GCC/OSX/*/
+External/SDK/GCC/Windows/*/
+External/SDK/VisualStudio/*/
+External/SDK/Windows/*/
+
+# Windows shortcuts
+*.lnk
+
+# =========================
+# Operating System Files
+# =========================
+
+# OSX
+# =========================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
