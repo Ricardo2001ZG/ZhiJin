@@ -1,8 +1,6 @@
 
 # “织锦”分布式 Shader 编译平台
 
-## 项目简介
-
 织锦平台是一款基于 FastBuild(C++)、Flutter(Dart)、Element-plus(Vue)、Flask(Python) 开发而成的综合分布式编译平台，提供 Web 与 桌面版本的可视化客户端。
 
 ## 代码文件夹组织
@@ -32,17 +30,17 @@ ZhiJinVue 对应平台的 Web 前端模块，负责发起与管理任务等前�
 
 Inner 对应平台的额外部署模块，用于第三方开发者的私有功能接入，gitignore 默认屏蔽上传。
 
-## 开发环境部署
+## 开发环境配置
 
-### 一键部署
+### 一键配置
 
-若使用本方式进行安装，无需进行后续手动部署流程。
+若使用本方式进行安装，无需进行后续手动配置流程。
 
-#### 图形化部署形式
+#### 图形化配置形式
 
 待开发
 
-#### 命令行部署形式
+#### 命令行配置形式
 
 待开发
 
@@ -88,21 +86,38 @@ Inner 对应平台的额外部署模块，用于第三方开发者的私有功�
 
 ### ZhiJinFlaskServer
 
-#### Windows
+#### 一键配置
 
-#### Linux
+若使用本方式进行安装，无需进行后续手动配置流程。
+
+**Windows:**
+
+1. 将 ZhiJinFlaskServer-Library.zip 内文件解压，放在本工程根目录。
+
+2. 点击文件夹内 zhijin_flask_server_installer.bat 进行一键安装。
+
+3. 点击 dev_environment.bat 启动开发环境。
+
+4. 输入 python app.py 启动项目编译。
+
+#### Windows 手动配置
 
 待完成。
 
-#### MacOS
+#### Linux 手动配置
+
+待完成。
+
+#### MacOS 手动配置
+
+请手动安装 python 及其相关组件。
 
 ```
 cd ./Code/ZhiJinFlaskServer
 
-# TODO：python 与 pip 安装流程，待编写。
-
 # 国内镜像更换，选填
 # pip config set global.index-url https://mirrors.cloud.tencent.com/pypi/simple
+
 pip install pip -U
 pip install pyenv 
 pyenv virtualenv flask_api
@@ -112,9 +127,9 @@ pip install -r requirements.txt
 
 ### ZhiJinVue
 
-#### 一键部署
+#### 一键配置
 
-若使用本方式进行安装，无需进行后续手动部署流程。
+若使用本方式进行安装，无需进行后续手动配置流程。
 
 **Windows:**
 
@@ -126,7 +141,7 @@ pip install -r requirements.txt
 
 4. 输入 vue-cli-service build 启动项目编译。
 
-#### Windows
+#### Windows 手动配置
 
 1. 安装node：[NodeJS 官网](https://nodejs.org/en/) 下载。
 
@@ -145,11 +160,11 @@ npm config set registry http://mirrors.cloud.tencent.com/npm/
 ```
 npm install
 ```
-#### Linux
+#### Linux 手动配置
 
 待完成。
 
-#### MacOS
+#### MacOS 手动配置
 
 待完成。
 
