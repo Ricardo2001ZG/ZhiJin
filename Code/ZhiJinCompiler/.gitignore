@@ -1,13 +1,4 @@
-# ZhiJin Project gitignore
-
-## Inner Files
-Code/Inner/*
-Documents/Inner/*
-
-## Projects Cache
-Code/ZhiJinCompiler/.vs
-Code/ZhiJinCompiler/x64
-Code/ZhiJinVue/Env/node-v18.14.0-win-x64
+# ZhiJinCompiler Project gitignore
 
 ## MacOS
 *.DS_Store
