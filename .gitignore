@@ -5,8 +5,10 @@ Code/Inner/*
 Documents/Inner/*
 
 ## Projects Cache
-Code/ZhiJinComplier/.vs
-Code/ZhiJinVue/Env/node-v18.14.0-win-x64
+*.vscode
+*.vs
+Code/ZhiJinVue/env/node-v18.14.0-win-x64
+Code/ZhiJinFlaskServer/test
 
 ## MacOS
 *.DS_Store
