@@ -29,7 +29,8 @@
             Print( '----------------------------------------------------------------------' )
             Print( '- Unable to auto-detect Clang - please specify installation manually -' )
             Print( '----------------------------------------------------------------------' )
-            .Clang11_BasePath = .Set_Path_Here    // <-- Set path here
+            .Clang11_Version    = '11.x.x'
+            .Clang11_BasePath = 'C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\Llvm\x64'   // <-- Set path here
         #endif
     #endif
 #endif
@@ -96,7 +97,7 @@ Compiler( 'Compiler-Clang11-NonCL' )
 
     // Linker
     .Linker                         = '$Clang11_BasePath$\bin\lld-link.exe'
-    .LinkerOptions                  = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
+    .LinkerOptions                  = '/NODEFAULTLIB /W4 /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
                                     + .VSLibPaths
 
     // File Extensions

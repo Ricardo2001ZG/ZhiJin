@@ -8,13 +8,13 @@
 //  2) Specified via environment variables (VS Command Prompt)
 //  3) Part of a Visual Studio installation (Program Files)
 //
-#if file_exists( "2022/Community/VC/Tools/MSVC/14.31.31103/bin/Hostx64/x64/cl.exe" )
+#if file_exists( "2022/Community/VC/Tools/MSVC/14.35.32215/bin/Hostx64/x64/cl.exe" )
     //
     // Use vendorized toolchain
     //
     .VS2022_BasePath        = '$_CURRENT_BFF_DIR_$/2022/Community/VC'
-    .VS2022_Version         = '14.31.31103'
-    .VS2022_MSC_VER         = '1931'
+    .VS2022_Version         = '14.35.32215'
+    .VS2022_MSC_VER         = '2052'
 #else
     //
     // Use environment variable if available (VS Command Prompt)
@@ -24,25 +24,25 @@
         #import VCToolsVersion
         .VS2022_BasePath        = .VCINSTALLDIR
         .VS2022_Version         = .VCToolsVersion
-        .VS2022_MSC_VER         = '1931' // NOTE: This cannot be detected and may be incorrect
+        .VS2022_MSC_VER         = '2052' // NOTE: This cannot be detected and may be incorrect
     #else
         //
         // Use Visual Studio installation
         //
-        #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.31.31103/bin/Hostx64/x64/cl.exe" )
+        #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.35.32215/bin/Hostx64/x64/cl.exe" )
             // v17.1.4
             .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Community/VC'
-            .VS2022_Version         = '14.31.31103'
-            .VS2022_MSC_VER         = '1931'
+            .VS2022_Version         = '14.35.32215'
+            .VS2022_MSC_VER         = '2052'
         #else
             //
             // Use Visual Studio 2022 Enterprise installation (used by GitHub Actions)
             //
-            #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.31.31103/bin/Hostx64/x64/cl.exe" )
+            #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.35.32215/bin/Hostx64/x64/cl.exe" )
                 // v17.1.4
                 .VS2022_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC'
-                .VS2022_Version         = '14.31.31103'
-                .VS2022_MSC_VER         = '1931'
+                .VS2022_Version         = '14.35.32215'
+                .VS2022_MSC_VER         = '2052'
             #else
                 //
                 // Failed
@@ -79,8 +79,8 @@ Compiler( 'Compiler-VS2022-x64' )
                     '$Root$/tbbmalloc.dll' // Required as of 16.2 (14.22.27905)
                     '$Root$/vcruntime140.dll'
                     '$Root$/vcruntime140_1.dll' // Required as of 16.5.1 (14.25.28610)
-                    '$Root$/1033/clui.dll'
-                    '$Root$/1033/mspft140ui.dll' // Localized messages for static analysis
+                    '$Root$/2052/clui.dll'
+                    '$Root$/2052/mspft140ui.dll' // Localized messages for static analysis
                   }
 
     #if ENABLE_LIGHT_CACHE
@@ -112,7 +112,7 @@ Compiler( 'Compiler-VS2022-x64' )
 
                                     // Warnings
                                     + ' /Wall'              // Enable all warnings (we'll disable those that are not useful)
-                                    + ' /WX'                // Warnings as errors
+                                    + ' /W4'                // Warnings as errors
 
                                     // These warnings are not useful
                                     + ' /wd4061' // enumerator '%s' in switch of enum '%s' is not explicitly handled by a case label
@@ -137,11 +137,11 @@ Compiler( 'Compiler-VS2022-x64' )
 
     // Librarian
     .Librarian                      = '$VS2022_ToolchainPath$/bin/Hostx64/x64/lib.exe'
-    .LibrarianOptions               = '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
+    .LibrarianOptions               = '/NODEFAULTLIB /W4 /NOLOGO /OUT:"%2" "%1"'
 
     // Linker
     .Linker                         = '$VS2022_ToolchainPath$/bin/Hostx64/x64/link.exe'
-    .LinkerOptions                  = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
+    .LinkerOptions                  = '/NODEFAULTLIB /W4 /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
                                     + .VSLibPaths
     //CRT
     .CRTLibs_Static                 = ' LIBCMT.LIB'

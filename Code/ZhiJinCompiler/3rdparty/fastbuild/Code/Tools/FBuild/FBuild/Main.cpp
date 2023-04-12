@@ -18,40 +18,84 @@
 
 #include <memory.h>
 #include <stdio.h>
-#if defined( __WINDOWS__ )
-    #include "Core/Env/WindowsHeader.h"
+#if defined(__WINDOWS__)
+#include "Core/Env/WindowsHeader.h"
 #endif
+
+#include "channel.h"
+#include "Core/Strings/AString.h"
+#include "Tools/FBuild/FBuild/processQueue.h"
+#include "Tools/FBuild/FBuild/JobProcess.h"
+bool g_stop = false;
+
+/* static */ uint32_t consumer(void * /*userData*/)
+{
+    FLOG_OUTPUT("start get job process form channel.\n");
+    while (!g_processQueue.empty() || !g_stop)
+    {
+        JobProcess *buf = g_processQueue.pop();
+
+        if (buf != nullptr)
+        {
+            try
+            {
+                // 一般用于最后的总结
+                if ((uint8_t)buf->GetType() == (uint8_t)JobProcess::job_type::other)
+                {
+                    FLOG_OUTPUT("%s\n", buf->GetName());
+                    continue;
+                }
+
+                FLOG_OUTPUT("task total: %u success: %u failed: %u\n",g_processQueue.GetTotal(),g_processQueue.GetSuccess(),g_processQueue.GetFailed());
+
+                FLOG_OUTPUT("Job name: %s stats: %s location: %s buildTime: %ums\n",
+                            buf->GetName(),
+                            buf->JobProcessStatusToString(),
+                            buf->JobProcessLocationToString(),
+                            buf->GetProcessTime());
+
+                // 释放堆内存
+                delete (buf);
+            }
+            catch (void *)
+            {
+                FLOG_ERROR("pointer address is not vailed.\n");
+            }
+        }
+    }
+    return 0;
+}
 
 // Return Codes
 //------------------------------------------------------------------------------
 enum ReturnCodes
 {
-    FBUILD_OK                               = 0,
-    FBUILD_BUILD_FAILED                     = -1,
-    FBUILD_ERROR_LOADING_BFF                = -2,
-    FBUILD_BAD_ARGS                         = -3,
-    FBUILD_ALREADY_RUNNING                  = -4,
-    FBUILD_FAILED_TO_SPAWN_WRAPPER          = -5,
-    FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL    = -6,
-    FBUILD_WRAPPER_CRASHED                  = -7,
-    FBUILD_FAILED_TO_WSL_WRAPPER            = -8,
-    FBUILD_FAILED_TO_WRITE_PROFILE_JSON     = -9,
+    FBUILD_OK = 0,
+    FBUILD_BUILD_FAILED = -1,
+    FBUILD_ERROR_LOADING_BFF = -2,
+    FBUILD_BAD_ARGS = -3,
+    FBUILD_ALREADY_RUNNING = -4,
+    FBUILD_FAILED_TO_SPAWN_WRAPPER = -5,
+    FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL = -6,
+    FBUILD_WRAPPER_CRASHED = -7,
+    FBUILD_FAILED_TO_WSL_WRAPPER = -8,
+    FBUILD_FAILED_TO_WRITE_PROFILE_JSON = -9,
 };
 
 // Headers
 //------------------------------------------------------------------------------
-int WrapperMainProcess( const AString & args, const FBuildOptions & options, SystemMutex & finalProcess );
-int WrapperIntermediateProcess( const FBuildOptions & options );
-int32_t WrapperModeForWSL( const FBuildOptions & options );
-int Main( int argc, char * argv[] );
+int WrapperMainProcess(const AString &args, const FBuildOptions &options, SystemMutex &finalProcess);
+int WrapperIntermediateProcess(const FBuildOptions &options);
+int32_t WrapperModeForWSL(const FBuildOptions &options);
+int Main(int argc, char *argv[]);
 
 // Misc
 //------------------------------------------------------------------------------
 // data passed between processes in "wrapper" mode
 struct SharedData
 {
-    bool    Started;
-    int     ReturnCode;
+    bool Started;
+    int ReturnCode;
 };
 
 // Global
@@ -60,17 +104,17 @@ SharedMemory g_SharedMemory;
 
 // main
 //------------------------------------------------------------------------------
-int main( int argc, char * argv[] )
+int main(int argc, char *argv[])
 {
     // This wrapper is purely for profiling scope
-    const int result = Main( argc, argv );
+    const int result = Main(argc, argv);
     PROFILE_SYNCHRONIZE // make sure no tags are active and do one final sync
-    return result;
+        return result;
 }
 
 // Main
 //------------------------------------------------------------------------------
-int Main( int argc, char * argv[] )
+int Main(int argc, char *argv[])
 {
     PROFILE_FUNCTION;
 
@@ -82,58 +126,61 @@ int Main( int argc, char * argv[] )
     // handle cmd line args
     FBuildOptions options;
     options.m_SaveDBOnCompletion = true; // Override default
-    options.m_ShowProgress = true; // Override default
-    switch ( options.ProcessCommandLine( argc, argv ) )
+    options.m_ShowProgress = true;       // Override default
+    switch (options.ProcessCommandLine(argc, argv))
     {
-        case FBuildOptions::OPTIONS_OK:             break;
-        case FBuildOptions::OPTIONS_OK_AND_QUIT:    return FBUILD_OK;
-        case FBuildOptions::OPTIONS_ERROR:          return FBUILD_BAD_ARGS;
+    case FBuildOptions::OPTIONS_OK:
+        break;
+    case FBuildOptions::OPTIONS_OK_AND_QUIT:
+        return FBUILD_OK;
+    case FBuildOptions::OPTIONS_ERROR:
+        return FBUILD_BAD_ARGS;
     }
 
     const FBuildOptions::WrapperMode wrapperMode = options.m_WrapperMode;
-    if ( wrapperMode == FBuildOptions::WRAPPER_MODE_INTERMEDIATE_PROCESS )
+    if (wrapperMode == FBuildOptions::WRAPPER_MODE_INTERMEDIATE_PROCESS)
     {
-        return WrapperIntermediateProcess( options );
+        return WrapperIntermediateProcess(options);
     }
-    if ( wrapperMode == FBuildOptions::WRAPPER_MODE_WINDOWS_SUBSYSTEM_FOR_LINUX )
+    if (wrapperMode == FBuildOptions::WRAPPER_MODE_WINDOWS_SUBSYSTEM_FOR_LINUX)
     {
-        return WrapperModeForWSL( options );
+        return WrapperModeForWSL(options);
     }
 
-    #if defined( __WINDOWS__ )
-        // TODO:MAC Implement SetPriorityClass
-        // TODO:LINUX Implement SetPriorityClass
-        VERIFY( SetPriorityClass( GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS ) );
-    #endif
+#if defined(__WINDOWS__)
+    // TODO:MAC Implement SetPriorityClass
+    // TODO:LINUX Implement SetPriorityClass
+    VERIFY(SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS));
+#endif
 
     // don't buffer output
-    VERIFY( setvbuf( stdout, nullptr, _IONBF, 0 ) == 0 );
-    VERIFY( setvbuf( stderr, nullptr, _IONBF, 0 ) == 0 );
+    VERIFY(setvbuf(stdout, nullptr, _IONBF, 0) == 0);
+    VERIFY(setvbuf(stderr, nullptr, _IONBF, 0) == 0);
 
     // ensure only one FASTBuild instance is running at a time
-    SystemMutex mainProcess( options.GetMainProcessMutexName().Get() );
+    SystemMutex mainProcess(options.GetMainProcessMutexName().Get());
 
     // in "wrapper" mode, Main process monitors life of final process using this
     // (when main process can acquire, final process has terminated)
-    SystemMutex finalProcess( options.GetFinalProcessMutexName().Get() );
+    SystemMutex finalProcess(options.GetFinalProcessMutexName().Get());
 
     // only 1 instance running at a time
-    if ( ( wrapperMode == FBuildOptions::WRAPPER_MODE_MAIN_PROCESS ) ||
-         ( wrapperMode == FBuildOptions::WRAPPER_MODE_NONE ) )
+    if ((wrapperMode == FBuildOptions::WRAPPER_MODE_MAIN_PROCESS) ||
+        (wrapperMode == FBuildOptions::WRAPPER_MODE_NONE))
     {
-        if ( mainProcess.TryLock() == false )
+        if (mainProcess.TryLock() == false)
         {
-            if ( options.m_WaitMode == false )
+            if (options.m_WaitMode == false)
             {
-                OUTPUT( "FBuild: Error: Another instance of FASTBuild is already running in '%s'.\n", options.GetWorkingDir().Get() );
+                OUTPUT("FBuild: Error: Another instance of FASTBuild is already running in '%s'.\n", options.GetWorkingDir().Get());
                 return FBUILD_ALREADY_RUNNING;
             }
 
-            OUTPUT( "FBuild: Waiting for another FASTBuild to terminate due to -wait option.\n" );
-            while( mainProcess.TryLock() == false )
+            OUTPUT("FBuild: Waiting for another FASTBuild to terminate due to -wait option.\n");
+            while (mainProcess.TryLock() == false)
             {
-                Thread::Sleep( 1000 );
-                if ( FBuild::GetStopBuild() )
+                Thread::Sleep(1000);
+                if (FBuild::GetStopBuild())
                 {
                     return FBUILD_BUILD_FAILED;
                 }
@@ -141,33 +188,33 @@ int Main( int argc, char * argv[] )
         }
     }
 
-    if ( wrapperMode == FBuildOptions::WRAPPER_MODE_MAIN_PROCESS )
+    if (wrapperMode == FBuildOptions::WRAPPER_MODE_MAIN_PROCESS)
     {
-        return WrapperMainProcess( options.m_Args, options, finalProcess );
+        return WrapperMainProcess(options.m_Args, options, finalProcess);
     }
 
-    ASSERT( ( wrapperMode == FBuildOptions::WRAPPER_MODE_NONE ) ||
-            ( wrapperMode == FBuildOptions::WRAPPER_MODE_FINAL_PROCESS ) );
+    ASSERT((wrapperMode == FBuildOptions::WRAPPER_MODE_NONE) ||
+           (wrapperMode == FBuildOptions::WRAPPER_MODE_FINAL_PROCESS));
 
-    SharedData * sharedData = nullptr;
-    if ( wrapperMode == FBuildOptions::WRAPPER_MODE_FINAL_PROCESS )
+    SharedData *sharedData = nullptr;
+    if (wrapperMode == FBuildOptions::WRAPPER_MODE_FINAL_PROCESS)
     {
-        while ( !finalProcess.TryLock() )
+        while (!finalProcess.TryLock())
         {
-            OUTPUT( "FBuild: Waiting for another FASTBuild to terminate...\n" );
-            if ( mainProcess.TryLock() )
+            OUTPUT("FBuild: Waiting for another FASTBuild to terminate...\n");
+            if (mainProcess.TryLock())
             {
                 // main process has aborted, terminate
                 return FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL;
             }
-            Thread::Sleep( 1000 );
+            Thread::Sleep(1000);
         }
 
-        g_SharedMemory.Open( options.GetSharedMemoryName().Get(), sizeof( SharedData ) );
+        g_SharedMemory.Open(options.GetSharedMemoryName().Get(), sizeof(SharedData));
 
         // signal to "main" process that we have started
         sharedData = (SharedData *)g_SharedMemory.GetPtr();
-        if ( sharedData == nullptr )
+        if (sharedData == nullptr)
         {
             // main process was killed while we were waiting
             return FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL;
@@ -175,12 +222,12 @@ int Main( int argc, char * argv[] )
         sharedData->Started = true;
     }
 
-    FBuild fBuild( options );
+    FBuild fBuild(options);
 
     // load the dependency graph if available
-    if ( !fBuild.Initialize() )
+    if (!fBuild.Initialize())
     {
-        if ( sharedData )
+        if (sharedData)
         {
             sharedData->ReturnCode = FBUILD_ERROR_LOADING_BFF;
         }
@@ -189,94 +236,100 @@ int Main( int argc, char * argv[] )
     }
 
     bool result = false;
-    if ( options.m_DisplayTargetList )
+    Thread consumer_thead;
+    if (options.m_DisplayTargetList)
     {
-        fBuild.DisplayTargetList( options.m_ShowHiddenTargets );
+        fBuild.DisplayTargetList(options.m_ShowHiddenTargets);
         result = true; // DisplayTargetList cannot fail
     }
-    else if ( options.m_DisplayDependencyDB )
+    else if (options.m_DisplayDependencyDB)
     {
-        result = fBuild.DisplayDependencyDB( options.m_Targets );
+        result = fBuild.DisplayDependencyDB(options.m_Targets);
     }
-    else if ( options.m_GenerateDotGraph )
+    else if (options.m_GenerateDotGraph)
     {
-        result = fBuild.GenerateDotGraph( options.m_Targets, options.m_GenerateDotGraphFull );
+        result = fBuild.GenerateDotGraph(options.m_Targets, options.m_GenerateDotGraphFull);
     }
-    else if ( options.m_GenerateCompilationDatabase )
+    else if (options.m_GenerateCompilationDatabase)
     {
-        result = fBuild.GenerateCompilationDatabase( options.m_Targets );
+        result = fBuild.GenerateCompilationDatabase(options.m_Targets);
     }
-    else if ( options.m_CacheInfo )
+    else if (options.m_CacheInfo)
     {
         result = fBuild.CacheOutputInfo();
     }
-    else if ( options.m_CacheTrim )
+    else if (options.m_CacheTrim)
     {
         result = fBuild.CacheTrim();
     }
     else
     {
-        result = fBuild.Build( options.m_Targets );
+        // 开始获取job 的状态
+        consumer_thead.Start(consumer, "Consumer_Thread");
+        result = fBuild.Build(options.m_Targets);
     }
-
 
     // Build Profiling enabled?
     bool problemSavingBuildProfileJSON = false;
-    if ( options.m_Profile )
+    if (options.m_Profile)
     {
-        if ( BuildProfiler::Get().SaveJSON( options, "fbuild_profile.json" ) == false )
+        if (BuildProfiler::Get().SaveJSON(options, "fbuild_profile.json") == false)
         {
             problemSavingBuildProfileJSON = true;
         }
     }
 
-    if ( sharedData )
+    if (sharedData)
     {
-        sharedData->ReturnCode = ( result == true ) ? FBUILD_OK : FBUILD_BUILD_FAILED;
+        sharedData->ReturnCode = (result == true) ? FBUILD_OK : FBUILD_BUILD_FAILED;
     }
 
     // final line of output - status of build
-    if ( options.m_ShowTotalTimeTaken )
+    if (options.m_ShowTotalTimeTaken)
     {
         const float totalBuildTime = t.GetElapsed();
-        const uint32_t minutes = uint32_t( totalBuildTime / 60.0f );
-        const float seconds = ( totalBuildTime - (float)( minutes * 60 ) );
-        if ( minutes > 0 )
+        const uint32_t minutes = uint32_t(totalBuildTime / 60.0f);
+        const float seconds = (totalBuildTime - (float)(minutes * 60));
+        if (minutes > 0)
         {
-            FLOG_OUTPUT( "Time: %um %05.3fs\n", minutes, (double)seconds );
+            FLOG_OUTPUT("Time: %um %05.3fs\n", minutes, (double)seconds);
         }
         else
         {
-            FLOG_OUTPUT( "Time: %05.3fs\n", (double)seconds );
+            FLOG_OUTPUT("Time: %05.3fs\n", (double)seconds);
         }
     }
 
+    // wait for output
+    g_stop = true;
+    consumer_thead.Join();
+
     ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
 
-    if ( problemSavingBuildProfileJSON )
+    if (problemSavingBuildProfileJSON)
     {
         return FBUILD_FAILED_TO_WRITE_PROFILE_JSON;
-    }    
-    return ( result == true ) ? FBUILD_OK : FBUILD_BUILD_FAILED;
+    }
+    return (result == true) ? FBUILD_OK : FBUILD_BUILD_FAILED;
 }
 
 // WrapperMainProcess
 //------------------------------------------------------------------------------
-int WrapperMainProcess( const AString & args, const FBuildOptions & options, SystemMutex & finalProcess )
+int WrapperMainProcess(const AString &args, const FBuildOptions &options, SystemMutex &finalProcess)
 {
     // Create SharedMemory to communicate between Main and Final process
     SharedMemory sm;
-    g_SharedMemory.Create( options.GetSharedMemoryName().Get(), sizeof( SharedData ) );
-    SharedData * sd = (SharedData *)g_SharedMemory.GetPtr();
-    memset( sd, 0, sizeof( SharedData ) );
+    g_SharedMemory.Create(options.GetSharedMemoryName().Get(), sizeof(SharedData));
+    SharedData *sd = (SharedData *)g_SharedMemory.GetPtr();
+    memset(sd, 0, sizeof(SharedData));
     sd->ReturnCode = FBUILD_WRAPPER_CRASHED;
 
     // launch intermediate process
-    AStackString<> argsCopy( args );
+    AStackString<> argsCopy(args);
     argsCopy += " -wrapperintermediate";
 
     Process p;
-    if ( !p.Spawn( options.m_ProgramName.Get(), argsCopy.Get(), options.GetWorkingDir().Get(), nullptr, true ) ) // true = forward output to our tty
+    if (!p.Spawn(options.m_ProgramName.Get(), argsCopy.Get(), options.GetWorkingDir().Get(), nullptr, true)) // true = forward output to our tty
     {
         return FBUILD_FAILED_TO_SPAWN_WRAPPER;
     }
@@ -284,31 +337,31 @@ int WrapperMainProcess( const AString & args, const FBuildOptions & options, Sys
     // the intermediate process will exit immediately after launching the final
     // process
     const int32_t result = p.WaitForExit();
-    if ( result == FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL )
+    if (result == FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL)
     {
-        OUTPUT( "FBuild: Error: Intermediate process failed to spawn the final process.\n" );
+        OUTPUT("FBuild: Error: Intermediate process failed to spawn the final process.\n");
         return result;
     }
-    else if ( result != FBUILD_OK )
+    else if (result != FBUILD_OK)
     {
-        OUTPUT( "FBuild: Error: Intermediate process failed (%i).\n", result );
+        OUTPUT("FBuild: Error: Intermediate process failed (%i).\n", result);
         return result;
     }
 
     // wait for final process to signal as started
-    while ( sd->Started == false )
+    while (sd->Started == false)
     {
-        Thread::Sleep( 1 );
+        Thread::Sleep(1);
     }
 
     // wait for final process to exit
-    for ( ;; )
+    for (;;)
     {
-        if ( finalProcess.TryLock() == true )
+        if (finalProcess.TryLock() == true)
         {
             break; // final process has released the mutex
         }
-        Thread::Sleep( 1 );
+        Thread::Sleep(1);
     }
 
     return sd->ReturnCode;
@@ -316,14 +369,14 @@ int WrapperMainProcess( const AString & args, const FBuildOptions & options, Sys
 
 // WrapperIntermediateProcess
 //------------------------------------------------------------------------------
-int WrapperIntermediateProcess( const FBuildOptions & options )
+int WrapperIntermediateProcess(const FBuildOptions &options)
 {
     // launch final process
-    AStackString<> argsCopy( options.m_Args );
+    AStackString<> argsCopy(options.m_Args);
     argsCopy += " -wrapperfinal";
 
     Process p;
-    if ( !p.Spawn( options.m_ProgramName.Get(), argsCopy.Get(), options.GetWorkingDir().Get(), nullptr, true ) ) // true = forward output to our tty
+    if (!p.Spawn(options.m_ProgramName.Get(), argsCopy.Get(), options.GetWorkingDir().Get(), nullptr, true)) // true = forward output to our tty
     {
         return FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL;
     }
@@ -335,11 +388,11 @@ int WrapperIntermediateProcess( const FBuildOptions & options )
 
 // WrapperModeForWSL
 //------------------------------------------------------------------------------
-int32_t WrapperModeForWSL( const FBuildOptions & options )
+int32_t WrapperModeForWSL(const FBuildOptions &options)
 {
     // launch final process
     Process p;
-    if ( !p.Spawn( options.m_WSLPath.Get(), options.m_Args.Get(), options.GetWorkingDir().Get(), nullptr, true ) ) // true = forward output to our tty
+    if (!p.Spawn(options.m_WSLPath.Get(), options.m_Args.Get(), options.GetWorkingDir().Get(), nullptr, true)) // true = forward output to our tty
     {
         return FBUILD_FAILED_TO_WSL_WRAPPER;
     }

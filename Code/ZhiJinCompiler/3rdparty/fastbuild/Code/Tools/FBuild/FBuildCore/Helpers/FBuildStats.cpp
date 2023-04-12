@@ -14,6 +14,11 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
+// channel
+#include "Tools\FBuild\FBuild\JobProcess.h"
+#include "Tools\FBuild\FBuild\processQueue.h"
+
+
 // Static
 //------------------------------------------------------------------------------
 // For unit test count check stability we want to exclude "ExtraFiles" on CompilerNodes
@@ -204,6 +209,23 @@ void FBuildStats::OutputSummary() const
     const float remoteRatio = ( totalRemoteCPUInSeconds / m_TotalBuildTime );
     output.AppendFormat( " - Remote CPU : %s (%2.1f:1)\n", buffer.Get(), (double)remoteRatio );
     output += "-----------------------------------------------------------------\n";
+
+
+    // 发给channel
+        {
+        // 这里是堆上分配的内存，要记得清理
+        JobProcess *node_process = new JobProcess;
+        node_process->SetName(AString(output.Get()));
+        node_process->SetStatus(JobProcess::job_status::process);
+        node_process->SetLocation(JobProcess::job_location::local);
+        node_process->SetType(JobProcess::job_type::other);
+        if (!g_processQueue.push(node_process))
+        {
+            // FLOG_OUTPUT("push channel [name:%s] [address:%p] failed\n",node_process->GetName(),node_process);
+        }
+    }
+
+
 
     OUTPUT( "%s", output.Get() );
 }
