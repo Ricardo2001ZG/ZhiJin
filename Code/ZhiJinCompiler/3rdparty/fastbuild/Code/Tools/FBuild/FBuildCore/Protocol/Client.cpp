@@ -24,6 +24,10 @@
 #include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
 
+#include "Tools\FBuild\FBuild\JobProcess.h"
+#include "Tools\FBuild\FBuild\processQueue.h"
+
+
 // Defines
 //------------------------------------------------------------------------------
 #define CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS ( 0.1f )
@@ -478,6 +482,21 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     }
     FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
 
+    {
+
+        // 这里是堆上分配的内存，要记得清理
+        JobProcess *node_process = new JobProcess;
+        node_process->SetName(AString(job->GetNode()->GetName().Get()));
+        node_process->SetStatus(JobProcess::job_status::process);
+        node_process->SetLocation(JobProcess::job_location::remote);
+        node_process->SetType(JobProcess::job_type::job);
+        if (!g_processQueue.push(node_process))
+        {
+            // FLOG_OUTPUT("push channel [name:%s] [address:%p] failed\n",node_process->GetName(),node_process);
+        }
+    }
+
+
     // Determine compression level we'd like the Server to use for returning the results
     int16_t resultCompressionLevel = -1; // Default compression level
     if ( FBuild::IsValid() )
@@ -671,6 +690,20 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
         DIST_INFO( "Got Result: %s - %s%s\n", ss->m_RemoteName.Get(),
                                               node->GetName().Get(),
                                               resultStr );
+    }
+
+
+    {
+        // 这里是堆上分配的内存，要记得清理
+        JobProcess *node_process = new JobProcess;
+        node_process->SetName(AString(job->GetNode()->GetName().Get()));
+        node_process->SetStatus(result ? JobProcess::job_status::success : JobProcess::job_status::failed);
+        node_process->SetLocation(JobProcess::job_location::remote);
+        node_process->SetType(JobProcess::job_type::job);
+        if (!g_processQueue.push(node_process))
+        {
+            // FLOG_OUTPUT("push channel [name:%s] [address:%p] failed\n",node_process->GetName(),node_process);
+        }
     }
 
     if ( FLog::IsMonitorEnabled() )
