@@ -1,0 +1,162 @@
+// HelperFunctions
+//------------------------------------------------------------------------------
+#once
+
+// CreateManifest
+//  - Generate a .manifest file for embedding into a Windows executable
+//------------------------------------------------------------------------------
+#if __WINDOWS__
+    function CreateManifest( .Alias
+                             .ManifestFile )
+    {
+        TextFile( .Alias )
+        {
+            .TextFileOutput             = .ManifestFile
+            .TextFileInputStrings       = {
+                                            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                                            '<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">'
+                                            '  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">'
+                                            '    <security>'
+                                            '      <requestedPrivileges>'
+                                            '        <requestedExecutionLevel level="asInvoker" uiAccess="false"/>'
+                                            '      </requestedPrivileges>'
+                                            '    </security>'
+                                            '  </trustInfo>'
+
+                                            // Long Path support
+                                            '  <application xmlns="urn:schemas-microsoft-com:asm.v3">'
+                                            '    <windowsSettings xmlns:ws2="http://schemas.microsoft.com/SMI/2016/WindowsSettings">'
+                                            '        <ws2:longPathAware>true</ws2:longPathAware>'
+                                            '    </windowsSettings>'
+                                            '  </application>'
+
+                                            '</assembly>'
+                                          }
+        }
+    }
+#endif
+
+// CreateCommonAliases
+//  - Generate common aliases for projects
+//------------------------------------------------------------------------------
+function CreateCommonAliases( .ProjectName )
+{
+    // Per-Config
+    #if __WINDOWS__
+        Alias( '$ProjectName$-Debug' )           { .Targets = { '$ProjectName$-X64-Debug', '$ProjectName$-X64Clang-Debug' } }
+        Alias( '$ProjectName$-Analyze' )         { .Targets = { '$ProjectName$-X64-Analyze', '$ProjectName$-X64Clang-Analyze' } }
+        Alias( '$ProjectName$-Profile' )         { .Targets = { '$ProjectName$-X64-Profile', '$ProjectName$-X64Clang-Profile' } }
+        Alias( '$ProjectName$-Release' )         { .Targets = { '$ProjectName$-X64-Release', '$ProjectName$-X64Clang-Release' } }
+        Alias( '$ProjectName$-ASan' )            { .Targets = { '$ProjectName$-X64Clang-ASan' } }
+        Alias( '$ProjectName$-TSan' )            { .Targets = { '$ProjectName$-X64Clang-TSan' } }
+    #endif
+    #if __LINUX__
+        Alias( '$ProjectName$-Debug' )           { .Targets = { '$ProjectName$-X64Linux-Debug',   '$ProjectName$-X64ClangLinux-Debug' } }
+        Alias( '$ProjectName$-Profile' )         { .Targets = { '$ProjectName$-X64Linux-Profile', '$ProjectName$-X64ClangLinux-Profile' } }
+        Alias( '$ProjectName$-Release' )         { .Targets = { '$ProjectName$-X64Linux-Release', '$ProjectName$-X64ClangLinux-Release' } }
+        Alias( '$ProjectName$-ASan' )            { .Targets = { '$ProjectName$-X64Linux-ASan',    '$ProjectName$-X64ClangLinux-ASan' } }
+        Alias( '$ProjectName$-MSan' )            { .Targets = { '$ProjectName$-X64ClangLinux-MSan' } }
+        Alias( '$ProjectName$-TSan' )            { .Targets = { '$ProjectName$-X64Linux-TSan',    '$ProjectName$-X64ClangLinux-TSan' } }
+    #endif
+    #if __OSX__
+        Alias( '$ProjectName$-Debug' )           { .Targets = { '$ProjectName$-X64OSX-Debug' } }
+        Alias( '$ProjectName$-Profile' )         { .Targets = { '$ProjectName$-X64OSX-Profile' } }
+        Alias( '$ProjectName$-Release' )         { .Targets = { '$ProjectName$-X64OSX-Release' } }
+    #endif
+
+    // Per-Platform
+    Alias( '$ProjectName$-X64' )             { .Targets = { '$ProjectName$-X64-Debug', '$ProjectName$-X64-Analyze', '$ProjectName$-X64-Release', '$ProjectName$-X64-Profile', '$ProjectName$-X64-ASan', '$ProjectName$-X64-TSan' } }
+    Alias( '$ProjectName$-X64Clang' )        { .Targets = { '$ProjectName$-X64Clang-Debug', '$ProjectName$-X64Clang-Release', '$ProjectName$-X64Clang-Profile', '$ProjectName$-X64Clang-ASan', '$ProjectName$-X64Clang-TSan' } }
+    Alias( '$ProjectName$-X64Linux' )        { .Targets = { '$ProjectName$-X64Linux-Debug', '$ProjectName$-X64Linux-Release', '$ProjectName$-X64Linux-Profile', '$ProjectName$-X64Linux-ASan', '$ProjectName$-X64Linux-TSan' } }
+    Alias( '$ProjectName$-X64ClangLinux' )   { .Targets = { '$ProjectName$-X64ClangLinux-Debug', '$ProjectName$-X64ClangLinux-Release', '$ProjectName$-X64ClangLinux-Profile', '$ProjectName$-X64ClangLinux-ASan', '$ProjectName$-X64ClangLinux-MSan', '$ProjectName$-X64ClangLinux-TSan' } }
+    Alias( '$ProjectName$-X64OSX' )          { .Targets = { '$ProjectName$-X64OSX-Debug', '$ProjectName$-X64OSX-Release', '$ProjectName$-X64OSX-Profile' } }
+
+    // All
+    Alias( '$ProjectName$' )
+    {
+        .Targets = { '$ProjectName$-Debug', '$ProjectName$-Profile', '$ProjectName$-Release' }
+        #if __LINUX__
+            .Targets + { '$ProjectName$-ASan', '$ProjectName$-MSan' }
+        #endif
+    }
+}
+
+// CreateVCXProj_Lib
+//------------------------------------------------------------------------------
+function CreateVCXProject_Lib( .Name
+                               .Path
+                               .Configs
+                               .ExtraOptions )
+{
+    // For each Windows x64 config add a Windows Subsystem for Linux (WSL) equivalent
+    .WSLConfigs = {}
+    ForEach( .Config in .Configs )
+    {
+        .Ignore = false
+        .WSLConfig =
+        [
+            Using( .Config )
+
+            // Map x64Clang to LinuxClang (ignoring any other configs like x64)
+            If( .SolutionPlatform != 'x64Clang' )
+            {
+                ^Ignore = true
+            }
+
+            .SolutionPlatform               = 'ClangLinux'
+            .Config                         = '$SolutionPlatform$-$SolutionConfig$'
+
+            // Configure Linux project options to allow remote debugging to work
+            .DebuggerFlavor                 = 'LinuxDebugger'
+            .Keyword                        = 'Linux'
+            .ApplicationType                = 'Linux'
+            .ApplicationTypeRevision        = '1.0'
+            .TargetLinuxPlatform            = 'Generic'
+            .LinuxProjectType               = '{D51BCBC9-82E9-4017-911E-C93873C4EA2B}'
+            .RemoteDebuggerCommand          = '/mnt/c/p4/depot/tmp/x64^$(Configuration)/$Path$/$Name$'
+            .RemoteDebuggerWorkingDirectory = '/mnt/c/p4/depot/Code/$Path$'
+
+            // Set build target
+            .ProjectBuildCommand            = .ProjectBuildCommand
+            .ProjectRebuildCommand          = .ProjectRebuildCommand
+            // For the 'UpdateSolution' we still want that to work normally (not via WSL)
+            If( .Name != 'UpdateSolution' ) // TODO:C Find a better way to manage this special case
+            {
+                ^ProjectBuildCommand            = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -wsl C:\Windows\System32\wsl.exe --cd C:\p4\depot\Code /mnt/c/p4/depot/Code/fbuild-linux -ide -fixuperrorpaths -dist -monitor -cache ^$(ProjectName)-x64^$(Configuration)'
+                ^ProjectRebuildCommand          = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -wsl C:\Windows\System32\wsl.exe --cd C:\p4\depot\Code /mnt/c/p4/depot/Code/fbuild-linux -ide -fixuperrorpaths -dist -monitor -cache -clean ^$(ProjectName)-x64^$(Configuration)'
+            }
+        ]
+        If( .Ignore == false )
+        {
+            ^WSLConfigs + .WSLConfig
+        }
+    }
+    .Configs + .WSLConfigs
+
+    VCXProject( '$Name$-proj' )
+    {
+        .ProjectConfigs             = .Configs
+
+        .ProjectOutput              = '../tmp/VisualStudio/Projects/$Name$.vcxproj'
+        .ProjectInputPaths          = '$Path$\'
+        .ProjectBasePath            = '$Path$\'
+
+
+        Using( .ExtraOptions )
+    }
+}
+
+// CreateVCXProject_Exe
+//------------------------------------------------------------------------------
+function CreateVCXProject_Exe( .Name
+                               .Path
+                               .Configs )
+{
+    .ExtraOptions   = [
+                        .LocalDebuggerCommand           = '^$(SolutionDir)..\^$(Configuration)\$Path$\$Name$.exe'
+                        .LocalDebuggerWorkingDirectory  = '^$(SolutionDir)..\..\Code\$Path$'
+                      ]
+    CreateVCXProject_Lib( .Name, .Path, .Configs, .ExtraOptions )
+}
+
+//------------------------------------------------------------------------------
