@@ -5,6 +5,7 @@ Code/Inner/*
 Documents/Inner/*
 
 ## Projects Cache
+env
 x64
 test
 *.vscode
