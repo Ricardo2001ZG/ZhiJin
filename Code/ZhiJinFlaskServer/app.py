@@ -8,6 +8,7 @@ def create_app():
     app = Flask(__name__)
     # Load configuration from external source here
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    app.config['JSON_AS_ASCII'] = False
     app.register_blueprint(routes)
 
     # Bind db to app

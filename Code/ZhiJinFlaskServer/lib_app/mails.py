@@ -36,7 +36,7 @@ class MailsSMTP:
             <table style="width: 600px; background-color: #000000;" align="center" cellspacing="0" cellpadding="0">
             <tr>
                 <td style=" height: 100px; background-color: #FFFFFF; border-bottom: 1px solid #c4bdb2;">
-                <img src="https://www.zhijin.com/zhijin_email_header_logo.png" width="600" height="100" alt="Steam">
+                <img src="https://www.zhijin.com/zhijin_email_header_logo.png" width="600" height="100" alt="ZhiJin">
                 </td>
             </tr>
             </table>

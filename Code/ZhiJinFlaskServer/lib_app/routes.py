@@ -8,9 +8,10 @@ from .run_task import run_task
 routes = Blueprint('routes', __name__)
 
 # 你好 谢谢 小笼包 再见
-@routes.route('/')
-def hello():
-    return "你好，谢谢，小笼包，再见"
+@routes.route('/get_state')
+def get_server_state():
+    state_response = {'resCode': 1, 'resMsg': '你好，谢谢，小笼包，再见'}
+    return jsonify(state_response)
 
 # 返回任务产生的文件列表
 @routes.route("/return", methods=["POST"])
