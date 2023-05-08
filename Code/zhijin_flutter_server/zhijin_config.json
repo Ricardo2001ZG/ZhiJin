@@ -1,0 +1,34 @@
+{
+  "appTitle": "织锦服务器端开发工具",
+  "checkStateModule": {
+    "globalConfig": {
+      "checkTimeout": 10
+    },
+    "checkStateList": [
+      {
+        "serviceName": "织锦 FastBuild 服务",
+        "serviceHost": "http://127.0.0.1",
+        "serviceUri": "/zhijin_compiler/get_state",
+        "serviceLocalPath": ""
+      },
+      {
+        "serviceName": "织锦 Flask 后端服务",
+        "serviceHost": "http://127.0.0.1",
+        "serviceUri": "/zhijin_flask/get_state",
+        "serviceLocalPath": ""
+      },
+      {
+        "serviceName": "织锦  Vue  前端服务",
+        "serviceHost": "http://127.0.0.1",
+        "serviceUri": "/zhijin_vue/get_state",
+        "serviceLocalPath": ""
+      },
+      {
+        "serviceName": "织锦 Server Flutter 自动构建服务",
+        "serviceHost": "http://127.0.0.1",
+        "serviceUri": "/zhijin_flutter_server/get_state",
+        "serviceLocalPath": ""
+      }
+    ]
+  }
+}

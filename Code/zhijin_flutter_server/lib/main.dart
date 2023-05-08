@@ -4,8 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:beamer/beamer.dart';
 // import 'package:webf_websocket/webf_websocket.dart';
 import 'color_schemes.g.dart';
-import 'zhijin_config.dart';
-import 'servers_state/state_gui.dart';
+import 'servers_state/state_view.dart';
 // import 'code_editor/editor_gui.dart';
 
 bool schemeFlags = false;
@@ -103,7 +102,7 @@ class _MainPageState extends State<MainPage> {
     return Column(children: [
       Expanded(flex: 2, child: Container(),),
       Expanded(flex: 1, child: Center(child: Text(
-        GlobalConfig.title,
+        '织锦服务端开发工具',
         style: Theme.of(context).textTheme.titleLarge,
       ),),),
       Expanded(flex: 1, child: Center(
@@ -161,7 +160,7 @@ class MyApp extends StatelessWidget {
             languageCode: 'zh', scriptCode: 'Hans', countryCode: 'CN'),
         // Chinese *See Advanced Locales below*
       ],
-      title: GlobalConfig.title,
+      title: '织锦服务端开发工具',
       theme: ThemeData(useMaterial3: true, colorScheme: lightColorScheme),
       darkTheme: ThemeData(useMaterial3: true, colorScheme: darkColorScheme),
       routeInformationParser: BeamerParser(),

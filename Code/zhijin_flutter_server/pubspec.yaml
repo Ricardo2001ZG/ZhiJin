@@ -33,6 +33,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   beamer: ^1.5.3
+  dio: ^5.1.1
+  dio_http2_adapter: ^2.2.0
   # webf: ^0.14.0-beta.8+2
   # webf_websocket: ^1.2.0
 
