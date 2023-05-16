@@ -12,3 +12,4 @@ pyflakes==3.0.1
 SQLAlchemy==2.0.2
 typing_extensions==4.4.0
 Werkzeug==2.2.2
+tencentcloud-sdk-python==3.0.891

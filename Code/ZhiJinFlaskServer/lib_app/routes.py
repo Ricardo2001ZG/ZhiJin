@@ -4,6 +4,7 @@ from .get_file import get_file
 from .message import *
 from .submit_task import submit_task
 from .run_task import run_task
+from .tencent_qcloud_sdk import get_tencent_cos_federation_token_by_sdk
 
 routes = Blueprint('routes', __name__)
 
@@ -13,11 +14,15 @@ def get_server_state():
     state_response = {'resCode': 1, 'resMsg': '你好，谢谢，小笼包，再见'}
     return jsonify(state_response)
 
+@routes.route('/get_tencent_cos_federation_token')
+def get_tencent_cos_federation_token():
+    resp = get_tencent_cos_federation_token_by_sdk()
+    return resp
+
 # 返回任务产生的文件列表
 @routes.route("/return", methods=["POST"])
 def handle_get_file():
     return generate_req_body(0, get_file(), "文件列表")
-
 
 # 提交任务
 @routes.route("/submitTask", methods=["POST"])
