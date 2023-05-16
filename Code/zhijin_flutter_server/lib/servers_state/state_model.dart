@@ -4,29 +4,13 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
-// 1. TODO: Flask Check Path
-// 2. TODO: Flask Auto Install
-
-Map<String, dynamic> getStateItem({
-  required String serviceName,
-  required String serviceUrlHost,
-  required String serviceUri,
-  String servicePath = '点击此处配置服务路径',
-  String serviceExecCmd = 'flask run',
-}) {
-  Map<String, dynamic> stateItemNode = {};
-  // stateItemNode['serviceName'] = 'No Service';
-  stateItemNode['serviceName'] = serviceName;
-  // stateItemNode['serviceUrlHost'] = 'https://127.0.0.1';
-  stateItemNode['serviceUrlHost'] = serviceUrlHost;
-  // stateItemNode['serviceUri'] = '/service_name/get_state';
-  stateItemNode['serviceUri'] = serviceUri;
-  stateItemNode['servicePath'] = servicePath;
-  stateItemNode['serviceExecCmd'] = serviceExecCmd;
-  stateItemNode['firstAutoCheck'] = false;
-  stateItemNode['serviceState'] = 0;
-  return stateItemNode;
-}
+// 1. TODO: Flask Auto Install
+// 1.1 Tencent Cos (Python)
+// 1.2 Tencent Cos (Flutter)
+// 1.3 Tencent Cos (C++)
+// 1.4 TODO: 7zip unzip (Flutter)
+// 1.5 TODO: Auto Install Script (Flutter)
+// 2. TODO: Flask Check Path
 
 class ServersStateModel {
   String configPath = 'noSupported';
@@ -37,6 +21,7 @@ class ServersStateModel {
   int initState = -1;
   String appTitle = "";
   List checkStateList = [];
+  Map<String, dynamic> remoteCosConf = {};
 
   Future<File> get _localFileAsync async {
     return File(configPath);
@@ -53,15 +38,13 @@ class ServersStateModel {
 
   void writeDataFromJson(Map<String, dynamic> configJson) {
     appTitle = configJson['appTitle'];
-    Map<String, dynamic> globalConfigMap = configJson['checkStateModule']['globalConfig'];
+    // Map<String, dynamic> globalConfigMap = configJson['checkStateModule']['globalConfig'];
     for (Map<String, dynamic> checkStateMap in configJson['checkStateModule']['checkStateList']) {
-      Map<String, dynamic> checkStateNode = getStateItem(
-          serviceName: checkStateMap['serviceName'],
-          serviceUrlHost: checkStateMap['serviceHost'],
-          serviceUri: checkStateMap['serviceUri']
-      );
+      Map<String, dynamic> checkStateNode = checkStateMap;
+      checkStateNode['serviceState'] = 0;
       checkStateList.add(checkStateNode);
     }
+    remoteCosConf = configJson['remoteCosModule'];
     if (kDebugMode) {
       print(checkStateList.toString());
     }

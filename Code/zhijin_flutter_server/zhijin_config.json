@@ -1,7 +1,21 @@
 {
   "appTitle": "织锦服务器端开发工具",
+  "comment": [
+    "1. 此处填写该 json 段配置注释。",
+    "2. autoUpdateConfigJson 说明: 0 为禁用自动更新功能; 1 为自动更新并校验本文件 MD5",
+    "3. checkStateList - serviceRemoteLibPath 说明: 根据填入 type 数值自动处理。"
+  ],
+  "globalConfig": {
+    "autoUpdateConfigJson": 0,
+    "autoUpdateConfigMD5": ""
+  },
   "checkStateModule": {
-    "globalConfig": {
+    "moduleConfig": {
+      "comment": [
+        "1. 此处填写该 json 段配置注释。",
+        "2. checkStateList - serviceRemoteLibType 说明: 1 为 腾讯云 cos 对象存储; 2 为 https 直链文件。",
+        "3. checkStateList - serviceRemoteLibPath 说明: 根据填入 type 数值自动处理。"
+      ],
       "checkTimeout": 10
     },
     "checkStateList": [
@@ -9,26 +23,83 @@
         "serviceName": "织锦 FastBuild 服务",
         "serviceHost": "http://127.0.0.1",
         "serviceUri": "/zhijin_compiler/get_state",
-        "serviceLocalPath": ""
+        "serviceLocalInstallPath": "",
+        "serviceRemoteLibType": 1,
+        "serviceRemoteLibPath": "",
+        "serviceDownloadsLibPath": ""
       },
       {
         "serviceName": "织锦 Flask 后端服务",
         "serviceHost": "http://127.0.0.1",
-        "serviceUri": "/zhijin_flask/get_state",
-        "serviceLocalPath": ""
+        "serviceUri": "/get_state",
+        "serviceLocalInstallPath": "",
+        "serviceRemoteLibType": 1,
+        "serviceRemoteLibPath": "zhijin_env/python-3.11.2-embed-amd64.7z",
+        "serviceDownloadsLibPath": "downloads\\python-3.11.2-embed-amd64.7z",
+        "serviceAutoInstallScripts": "downloads\\python-3.11.2-embed-amd64\\zhijin_flask_install.bat"
       },
       {
         "serviceName": "织锦  Vue  前端服务",
         "serviceHost": "http://127.0.0.1",
         "serviceUri": "/zhijin_vue/get_state",
-        "serviceLocalPath": ""
+        "serviceLocalPath": "",
+        "serviceRemoteLibType": 1,
+        "serviceRemoteLibPath": ""
       },
       {
         "serviceName": "织锦 Server Flutter 自动构建服务",
         "serviceHost": "http://127.0.0.1",
         "serviceUri": "/zhijin_flutter_server/get_state",
-        "serviceLocalPath": ""
+        "serviceLocalPath": "",
+        "serviceRemoteLibType": 1,
+        "serviceRemoteLibPath": ""
       }
     ]
+  },
+  "remoteCosModule": {
+    "comment": [
+      "1. SecretId: secret_id 替换为用户的 SecretId，建议使用子账号密钥，授权遵循最小权限指引，降低使用风险。",
+      "子账号密钥获取可参见 https://cloud.tencent.com/document/product/598/37140",
+      "2. SecretKey: secret_key 替换为用户的 SecretKey，建议使用子账号密钥，授权遵循最小权限指引，降低使用风险。",
+      "子账号密钥获取可参见 https://cloud.tencent.com/document/product/598/37140",
+      "3. Region: 存储桶地域, 替换为客户存储桶所在地域，可以在COS控制台指定存储桶的概览页查看存储桶地域信息，",
+      "参见 https://console.cloud.tencent.com/cos5/bucket/ ，",
+      "关于地域的详情见 https://cloud.tencent.com/document/product/436/6224",
+      "4. SignExpiredTime: 签名超时时间, 单位s",
+      "5. ConnectTimeoutInms: connect 超时时间, 单位ms",
+      "6. ReceiveTimeoutInms: recv 超时时间, 单位ms",
+      "7. UploadPartSize: 上传文件分块大小，1M~5G, 默认为10M",
+      "8. UploadCopyPartSize: 上传复制文件分块大小，5M~5G, 默认为20M",
+      "9. UploadThreadPoolSize: 单文件分块上传线程池大小",
+      "10. DownloadSliceSize: 下载文件分块大小",
+      "11. DownloadThreadPoolSize: 单文件下载线程池大小",
+      "12. AsynThreadPoolSize: 异步上传下载线程池大小",
+      "13. LogoutType: 日志输出类型,0:不输出,1:输出到屏幕,2:输出到 syslog",
+      "14. LogLevel: 日志级别:1: ERR, 2: WARN, 3:INFO, 4:DBG",
+      "15. IsDomainSameToHost: 是否使用专有的 host",
+      "16. DestDomain: 特定 host",
+      "17. IsUseIntranet: 是否使用特定ip和端口号",
+      "18. IntranetAddr: 特定 ip 和端口号,例如“127.0.0.1:80”"
+    ],
+    "appId": 1253986039,
+    "CosBucketName": "zhijindev",
+    "SecretId": "tmpSecretId",
+    "SecretKey": "tmpSecretKey",
+    "Region": "ap-guangzhou",
+    "SignExpiredTime": 360,
+    "ConnectTimeoutInms": 6000,
+    "ReceiveTimeoutInms": 60000,
+    "UploadPartSize": 10485760,
+    "UploadCopyPartSize": 20971520,
+    "UploadThreadPoolSize": 5,
+    "DownloadSliceSize": 4194304,
+    "DownloadThreadPoolSize": 5,
+    "AsynThreadPoolSize": 2,
+    "LogoutType": 1,
+    "LogLevel": 3,
+    "IsDomainSameToHost": false,
+    "DestDomain": "",
+    "IsUseIntranet": false,
+    "IntranetAddr": ""
   }
 }

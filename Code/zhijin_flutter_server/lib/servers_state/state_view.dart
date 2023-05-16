@@ -12,6 +12,31 @@ class _ServersStatePageState extends State<ServersStatePage> {
     return _serversStateViewModel.getCheckStateList();
   }
 
+  dynamic getServersStatePlugin(String serviceName, dynamic item) {
+    switch (serviceName) {
+      case '织锦 Flask 后端服务':
+        return Row(children: [
+          Container(width: 20,),
+          const Text('密钥测试: '),
+          Expanded(child: Container(),),
+          OutlinedButton(
+            onPressed: () async {
+              int debugState = await _serversStateViewModel.getCosFileFromRemoteFFI(
+                item['serviceRemoteLibPath'],
+                item['serviceDownloadsLibPath']
+              );
+              // setState(() {});
+            },
+            child: const Text('获取密钥'),
+          ),
+          Container(width: 20,),
+        ],);
+      case '默认插件示例':
+        return Container();
+    }
+    return Container();
+  }
+
   Row getExpansionPanelNodeRow(int serviceState, String serviceName) {
     Color stateIconColor = Colors.yellow.shade700;
     Icon stateIcon = Icon(Icons.sync_problem, color: stateIconColor,);
@@ -66,7 +91,7 @@ class _ServersStatePageState extends State<ServersStatePage> {
             Container(height: 10,),
             Row(children: [
               Container(width: 20,),
-              Text('检测服务： ${item['serviceUrlHost'] + item['serviceUri']}'),
+              Text('检测服务： ${item['serviceHost'] + item['serviceUri']}'),
               Expanded(child: Container(),),
               OutlinedButton(
                 child: const Text('一键检测'),
@@ -95,7 +120,7 @@ class _ServersStatePageState extends State<ServersStatePage> {
               Container(width: 20,),
             ],),
             Container(height: 10,),
-
+            getServersStatePlugin(item['serviceName'], item),
             Container(height: 10,),
           ],),
           isExpanded: item['isExpanded'],

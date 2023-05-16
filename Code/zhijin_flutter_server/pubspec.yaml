@@ -32,6 +32,8 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  ffi: ^2.0.2
+  path: ^1.8.2
   beamer: ^1.5.3
   dio: ^5.1.1
   dio_http2_adapter: ^2.2.0
