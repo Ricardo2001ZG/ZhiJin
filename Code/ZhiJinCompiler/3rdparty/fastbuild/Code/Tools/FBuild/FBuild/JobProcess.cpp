@@ -5,7 +5,9 @@
 #include "Tools/FBuild/FBuild/JobProcess.h"
 #include "Tools/FBuild/FBuild/channel.h"
 
-JobProcess::JobProcess() {}
+JobProcess::JobProcess() {
+    this->SetStatus(job_status::process);
+}
 
 JobProcess::JobProcess(const AString name, job_status _status, job_type _type, uint32_t _index)
 {
@@ -14,7 +16,9 @@ JobProcess::JobProcess(const AString name, job_status _status, job_type _type, u
     SetType(_type);
     SetIndex(_index);
 }
-JobProcess::~JobProcess() {}
+JobProcess::~JobProcess() {
+    // delete m_location;
+}
 
 const char *JobProcess::JobProcessStatusToString()
 {
@@ -33,8 +37,11 @@ const char *JobProcess::JobProcessStatusToString()
     }
 }
 
+
+// 遗弃方法，将在未来移除
 const char *JobProcess::JobProcessLocationToString()
 {
+    /*
     switch (GetLocation())
     {
     case JobProcess::job_location::local:
@@ -45,7 +52,21 @@ const char *JobProcess::JobProcessLocationToString()
     default:
         return "unknow";
     }
+    */
+    return GetLocation();
 }
+
+
+const char* JobProcess::ToString() {
+    AStackString<4096> message;
+    message.AppendFormat("job_name '%s' stats %s location %s buildTime %u",
+        this->GetName(),
+        this->JobProcessStatusToString(),
+        this->GetLocation(),
+        this->GetProcessTime());
+    return message.Get();
+}
+
 
 JobProcessQueue::JobProcessQueue()
 {
@@ -69,29 +90,36 @@ bool JobProcessQueue::push(JobProcess *item)
     {
         return false;
     }
+
+    // 加锁避免多线程下计量数值不对
+    m_Mutex.Lock();
     if (item->GetType() == JobProcess::job_type::job)
     {
-        total += 1;
         switch ((item->GetStatus()))
         {
         case JobProcess::job_status::cache:
+            cache += 1;
+            break;
         case JobProcess::job_status::success:
             success += 1;
             break;
         case JobProcess::job_status::failed:
             failed += 1;
             break;
-
+        case JobProcess::job_status::process:
+            total += 1;
+            break;
         default:
             break;
         }
     }
+    m_Mutex.Unlock();
     return m_Queue.push(item);
 }
 
 JobProcess* JobProcessQueue::pop()
 {
     JobProcess *new_job = nullptr;
-    bool result = m_Queue.pop(new_job);
+    m_Queue.pop(new_job);
     return new_job;
 }

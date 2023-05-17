@@ -22,49 +22,55 @@
 #include "Core/Env/WindowsHeader.h"
 #endif
 
-#include "channel.h"
-#include "Core/Strings/AString.h"
-#include "Tools/FBuild/FBuild/processQueue.h"
-#include "Tools/FBuild/FBuild/JobProcess.h"
-bool g_stop = false;
+// 二次开发
+//#include "channel.h"
+//#include "Core/Strings/AString.h"
+//#include "Tools/FBuild/FBuild/processQueue.h"
+//#include "Tools/FBuild/FBuild/JobProcess.h"
+//#include <Tools/FBuild/FBuildCore/Helpers/JSON.h>
+//bool g_stop = false;
 
-/* static */ uint32_t consumer(void * /*userData*/)
-{
-    FLOG_OUTPUT("start get job process form channel.\n");
-    while (!g_processQueue.empty() || !g_stop)
-    {
-        JobProcess *buf = g_processQueue.pop();
 
-        if (buf != nullptr)
-        {
-            try
-            {
-                // 一般用于最后的总结
-                if ((uint8_t)buf->GetType() == (uint8_t)JobProcess::job_type::other)
-                {
-                    FLOG_OUTPUT("%s\n", buf->GetName());
-                    continue;
-                }
-
-                FLOG_OUTPUT("task total: %u success: %u failed: %u\n",g_processQueue.GetTotal(),g_processQueue.GetSuccess(),g_processQueue.GetFailed());
-
-                FLOG_OUTPUT("Job name: %s stats: %s location: %s buildTime: %ums\n",
-                            buf->GetName(),
-                            buf->JobProcessStatusToString(),
-                            buf->JobProcessLocationToString(),
-                            buf->GetProcessTime());
-
-                // 释放堆内存
-                delete (buf);
-            }
-            catch (void *)
-            {
-                FLOG_ERROR("pointer address is not vailed.\n");
-            }
-        }
-    }
-    return 0;
-}
+///* static */ uint32_t HandleJobQueue(void * /*userData*/)
+//{
+//    FLOG_OUTPUT("start get job process form channel.\n");
+//    while (!g_processQueue.empty() || !g_stop)
+//    {
+//        JobProcess *buf = g_processQueue.pop();
+//
+//        if (buf != nullptr)
+//        {
+//            try
+//            {
+//                // other类型一般用于最后的总结输出
+//                if (buf->GetType() == JobProcess::job_type::other)
+//                {
+//                    FLOG_MONITOR("cat << EOF > summary\n"); //文本开始标记，方便第三方软件捕捉
+//                    FLOG_MONITOR("%s\n", buf->GetName());
+//                    FLOG_MONITOR("EOF\n");
+//                }
+//                else {
+//                    FLOG_MONITOR("task_total %u success %u cache %u failed %u\n", g_processQueue.GetTotal(), g_processQueue.GetSuccess(), g_processQueue.GetCache(), g_processQueue.GetFailed());
+//
+//                    FLOG_MONITOR("job_name '%s' stats %s location %s buildTime %u\n",
+//                        buf->GetName(),
+//                        buf->JobProcessStatusToString(),
+//                        buf->GetLocation(),
+//                        buf->GetProcessTime());
+//                }
+//
+//                // 释放堆内存
+//                delete (buf);
+//            }
+//            catch (void *)
+//            {
+//                FLOG_ERROR("pointer address is not vailed.\n");
+//            }
+//        }
+//    }
+//    FLOG_OUTPUT("Queue is empty ? %b", g_processQueue.empty());
+//    return 0;
+//}
 
 // Return Codes
 //------------------------------------------------------------------------------
@@ -265,8 +271,20 @@ int Main(int argc, char *argv[])
     else
     {
         // 开始获取job 的状态
-        consumer_thead.Start(consumer, "Consumer_Thread");
+        //consumer_thead.Start(HandleJobQueue, "Consumer_Thread");
+
+        // 开始构建
         result = fBuild.Build(options.m_Targets);
+
+        // 等待队列里信息全部消化完毕
+        //g_stop = true;
+        //consumer_thead.Join();
+
+        // Debug
+        //OUTPUT("Close hanlde process jobqueue");
+
+        // 最后关闭monitor流
+        FLog::StopBuild();
     }
 
     // Build Profiling enabled?
@@ -299,10 +317,6 @@ int Main(int argc, char *argv[])
             FLOG_OUTPUT("Time: %05.3fs\n", (double)seconds);
         }
     }
-
-    // wait for output
-    g_stop = true;
-    consumer_thead.Join();
 
     ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
 

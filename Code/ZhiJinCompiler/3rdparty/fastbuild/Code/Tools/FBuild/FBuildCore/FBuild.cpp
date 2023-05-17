@@ -497,7 +497,9 @@ void FBuild::SaveDependencyGraph( MemoryStream & stream, const char* nodeGraphDB
         FDELETE m_JobQueue;
         m_JobQueue = nullptr;
 
-        FLog::StopBuild();
+        // 等待所有的信息输出完毕之后再关闭
+        // 关闭流操作已经转移到Main.cpp中
+        //FLog::StopBuild();
     }
 
     if ( BuildProfiler::IsValid() )
