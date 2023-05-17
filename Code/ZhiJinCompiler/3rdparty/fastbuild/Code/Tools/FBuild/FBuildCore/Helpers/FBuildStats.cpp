@@ -15,8 +15,9 @@
 #include "Core/Tracing/Tracing.h"
 
 // channel
-#include "Tools\FBuild\FBuild\JobProcess.h"
-#include "Tools\FBuild\FBuild\processQueue.h"
+#include "Tools/FBuild/FBuild/JobProcess.h"
+#include "Tools/FBuild/FBuild/processQueue.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 
 
 // Static
@@ -211,20 +212,26 @@ void FBuildStats::OutputSummary() const
     output += "-----------------------------------------------------------------\n";
 
 
-    // 发给channel
-        {
-        // 这里是堆上分配的内存，要记得清理
-        JobProcess *node_process = new JobProcess;
-        node_process->SetName(AString(output.Get()));
-        node_process->SetStatus(JobProcess::job_status::process);
-        node_process->SetLocation(JobProcess::job_location::local);
-        node_process->SetType(JobProcess::job_type::other);
-        if (!g_processQueue.push(node_process))
-        {
-            // FLOG_OUTPUT("push channel [name:%s] [address:%p] failed\n",node_process->GetName(),node_process);
-        }
-    }
+    // 将总结信息发给channel
+    {
+        //JobProcess* node_process{};
+        //AStackString<4096> message;
+        //message.AppendFormat("%s", output.Get());
+        //node_process->SetName(AString(message.Get()));
+        //node_process->SetStatus(JobProcess::job_status::process);
+        //AStackString<10> local;
+        //local += "127.0.0.1";
 
+        //node_process->SetLocation(local.Get());
+        //node_process->SetType(JobProcess::job_type::other);
+        //if (!g_processQueue.push(node_process))
+        //{
+        //    OUTPUT("push channel [name:%s] [address:%p] failed\n",node_process->GetName(),node_process);
+        //}
+
+        FLOG_MONITOR("cat << EOF > summary\n%s\n",output.Get()); //文本开始标记，方便第三方软件捕捉
+        FLOG_MONITOR("EOF\n");
+    }
 
 
     OUTPUT( "%s", output.Get() );

@@ -254,6 +254,9 @@ static FileStream * g_MonitorFileStream = nullptr;
     }
 }
 
+// 该函数显示进度条
+// 进度条是由 正在运行/任务池数量 组成
+// 并没有总的任务数，任务池数量 = 正在运行+待运行数量
 // OutputProgress
 //------------------------------------------------------------------------------
 /*static*/ void FLog::OutputProgress( float time,

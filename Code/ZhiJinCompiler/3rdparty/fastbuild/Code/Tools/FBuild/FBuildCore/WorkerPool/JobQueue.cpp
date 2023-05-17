@@ -732,16 +732,20 @@ void JobQueue::FinishedProcessingJob(Job *job, bool success, bool wasARemoteJob)
     const AString &nodeName = job->GetNode()->GetName();
 
     {
-        // 这里是堆上分配的内存，要记得清理
-        JobProcess *node_process = new JobProcess;
-        node_process->SetName(AString(nodeName.Get()));
-        node_process->SetStatus(JobProcess::job_status::process);
-        node_process->SetLocation(JobProcess::job_location::local);
-        node_process->SetType(JobProcess::job_type::job);
-        if (!g_processQueue.push(node_process))
-        {
-            // FLOG_OUTPUT("push channel [name:%s] [address:%p] failed\n",node_process->GetName(),node_process);
-        }
+       JobProcess* node_process = new JobProcess();
+       node_process->SetName(AString(nodeName.Get()));
+       node_process->SetStatus(JobProcess::job_status::process);
+       AStackString<10> local;
+       local += "127.0.0.1";
+       node_process->SetLocation(local.Get());
+       node_process->SetType(JobProcess::job_type::job);
+       //if (!g_processQueue.push(node_process))
+       //{
+       //    FLOG_OUTPUT("push channel [name:%s] [address:%p] failed\n",node_process->GetName(),node_process);
+       //}
+
+       FLOG_MONITOR("%s\n",node_process->ToString());
+       delete node_process;
     }
 
     if ((node->GetType() == Node::OBJECT_NODE) ||
@@ -753,7 +757,7 @@ void JobQueue::FinishedProcessingJob(Job *job, bool success, bool wasARemoteJob)
         (node->GetType() == Node::TEST_NODE))
     {
         nodeRelevantToMonitorLog = true;
-        FLOG_MONITOR("START_JOB local \"%s\" \n", nodeName.Get());
+        FLOG_MONITOR("JobQueue START_JOB local \"%s\" \n", nodeName.Get());
     }
 
     // make sure the output path exists for files
@@ -835,37 +839,44 @@ void JobQueue::FinishedProcessingJob(Job *job, bool success, bool wasARemoteJob)
     node->AddProcessingTime(timeTakenMS);
 
     {
-        
-        // 这里是堆上分配的内存，要记得清理
-        JobProcess *node_process = new JobProcess;
+        // 记录本地任务结束
+        JobProcess *node_process = new JobProcess();
         node_process->SetName(AString(nodeName.Get()));
-        node_process->SetLocation(JobProcess::job_location::local);
+        AStackString<10> local;
+        local += "127.0.0.1";
+        AStackString<36> result_string;
+        node_process->SetLocation(local.Get());
         node_process->SetType(JobProcess::job_type::job);
         node_process->SetProcessTime(node->GetProcessingTime());
         switch (result)
         {
         case Node::NODE_RESULT_FAILED:
             node_process->SetStatus(JobProcess::job_status::failed);
+            result_string+="failed";
             break;
         case Node::NODE_RESULT_NEED_SECOND_BUILD_PASS:
             node_process->SetStatus(JobProcess::job_status::process);
+            result_string += "process";
             break;
 
         case Node::NODE_RESULT_OK:
             node_process->SetStatus(JobProcess::job_status::success);
+            result_string += "success";
             break;
         case Node::NODE_RESULT_OK_CACHE:
             node_process->SetStatus(JobProcess::job_status::cache);
+            result_string += "cache";
             break;
 
         default:
             break;
         }
 
-        if (!g_processQueue.push(node_process))
-        {
-            // FLOG_OUTPUT("push channel [name:%s] [address:%p] failed\n",node_process->GetName(),node_process);
-        }
+        //if (!g_processQueue.push(node_process))
+        //{
+        //    FLOG_OUTPUT("push channel [name:%s] [address:%p] failed\n",node_process->GetName(),node_process->GetLocation());
+        //}
+        FLOG_MONITOR("%s\n",node_process->ToString());
     }
 
     if (nodeRelevantToMonitorLog && FLog::IsMonitorEnabled())

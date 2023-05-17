@@ -483,17 +483,22 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
 
     {
-
-        // 这里是堆上分配的内存，要记得清理
-        JobProcess *node_process = new JobProcess;
+        // 记录远程编译开始
+        JobProcess* node_process = new JobProcess();
         node_process->SetName(AString(job->GetNode()->GetName().Get()));
         node_process->SetStatus(JobProcess::job_status::process);
-        node_process->SetLocation(JobProcess::job_location::remote);
+        uint32_t remote_name_len = ss->m_RemoteName.GetLength();
+        char* remote_name = new char[remote_name_len + 1];
+        AString::Copy(ss->m_RemoteName.Get(), remote_name);
+        node_process->SetLocation(remote_name);
         node_process->SetType(JobProcess::job_type::job);
-        if (!g_processQueue.push(node_process))
-        {
-            // FLOG_OUTPUT("push channel [name:%s] [address:%p] failed\n",node_process->GetName(),node_process);
-        }
+        //if (!g_processQueue.push(node_process))
+        //{
+        //    FLOG_OUTPUT("push channel [name:%s] [address:%p] failed\n",node_process->GetName(),node_process);
+        //}
+
+        FLOG_MONITOR("%s\n",node_process->ToString());
+        delete node_process;
     }
 
 
@@ -694,16 +699,21 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
 
 
     {
-        // 这里是堆上分配的内存，要记得清理
-        JobProcess *node_process = new JobProcess;
+        JobProcess* node_process = new JobProcess();
         node_process->SetName(AString(job->GetNode()->GetName().Get()));
         node_process->SetStatus(result ? JobProcess::job_status::success : JobProcess::job_status::failed);
-        node_process->SetLocation(JobProcess::job_location::remote);
+        uint32_t remote_name_len = ss->m_RemoteName.GetLength();
+        char* remote_name = new char[remote_name_len + 1];
+        AString::Copy(ss->m_RemoteName.Get(), remote_name);
+        node_process->SetLocation(remote_name);
         node_process->SetType(JobProcess::job_type::job);
-        if (!g_processQueue.push(node_process))
-        {
-            // FLOG_OUTPUT("push channel [name:%s] [address:%p] failed\n",node_process->GetName(),node_process);
-        }
+        //if (!g_processQueue.push(node_process))
+        //{
+        //    FLOG_OUTPUT("push channel [name:%s] [address:%p] failed\n",node_process->GetName(),node_process);
+        //}
+
+        FLOG_MONITOR("%s\n",node_process->ToString());
+        delete node_process;
     }
 
     if ( FLog::IsMonitorEnabled() )
