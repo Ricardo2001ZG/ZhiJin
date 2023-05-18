@@ -56,6 +56,15 @@
       }
     ]
   },
+  "tasksManageModule": {
+    "moduleConfig": {
+      "comment": [
+        "1. 此处填写该 json 段配置注释。",
+        "2. 待填写"
+      ]
+    },
+    "data": []
+  },
   "remoteCosModule": {
     "comment": [
       "1. SecretId: secret_id 替换为用户的 SecretId，建议使用子账号密钥，授权遵循最小权限指引，降低使用风险。",

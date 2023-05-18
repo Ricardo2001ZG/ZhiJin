@@ -5,6 +5,7 @@ import 'package:beamer/beamer.dart';
 // import 'package:webf_websocket/webf_websocket.dart';
 import 'color_schemes.g.dart';
 import 'servers_state/state_view.dart';
+import 'tasks_manage/tasks_manage_view.dart';
 // import 'code_editor/editor_gui.dart';
 
 bool schemeFlags = false;
@@ -48,6 +49,13 @@ class _GlobalScaffoldState extends State<GlobalScaffold> {
             title: const Text('服务器状态'),
             onTap: () {
               Beamer.of(context).beamToNamed('/servers_state');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.format_list_numbered),
+            title: const Text('任务管理'),
+            onTap: () {
+              Beamer.of(context).beamToNamed('/tasks_manage');
             },
           ),
           const ListTile(
@@ -139,6 +147,9 @@ class MyApp extends StatelessWidget {
         ),
         '/servers_state': (context, state, data) => const GlobalScaffold(
             childPage: ServersStatePage()
+        ),
+        '/tasks_manage': (context, state, data) => const GlobalScaffold(
+            childPage: TasksManagePage()
         ),
         '/code_editor': (context, state, data) => const GlobalScaffold(
             childPage: MainPage()
