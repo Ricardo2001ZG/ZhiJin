@@ -99,7 +99,7 @@
             <th>CPU</th>
             <th>Memory</th>
             <th>Disk</th>
-            <th>Actions</th>
+            <th>Last Connection Time</th>
           </tr>
         </thead>
         <tbody>
@@ -111,11 +111,7 @@
               <td>{{ instance['cpu'] }} CPUs</td>
               <td>{{ instance['memory'] }} GB RAM</td>
               <td>{{ instance['disk'] }} GB Disk</td>
-              <td>
-                <button class="btn btn-primary">Start</button>
-                <button class="btn btn-primary">Stop</button>
-                <button class="btn btn-primary">Delete</button>
-              </td>
+              <td>{{ instance['last_heartbeat_date']  }}</td>
             </tr>
           {% endfor %}
         </tbody>
